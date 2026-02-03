@@ -5,8 +5,8 @@
   "main": "app.js",
   "type": "module",
   "scripts": {
-   "start": "node ./src/app.js",
-   "dev": "nodemon ./src/app.js"
+    "start": "cross-env NODE_ENV=prod node ./src/app.js",
+    "dev": " cross-env NODE_ENV=local nodemon ./src/app.js"
   },
   "keywords": [
     "js",
@@ -18,8 +18,10 @@
   "dependencies": {
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
+    "cross-env": "^10.1.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "mongoose": "^9.1.5",
     "nodemon": "^3.1.10"
   }
 }
