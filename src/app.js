@@ -6,6 +6,9 @@ dotenv.config({path:`.env.${process.env.NODE_ENV}`})
 
 const app = express()
 
+// Middleware
+app.use(express.json())
+
 app.use("/auth", authRouter)
 
 // DB Connection

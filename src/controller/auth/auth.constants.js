@@ -1,0 +1,1 @@
+export const allowedSignUpFields = ["fullName","email","password","age","skills","about","photoUrl"]
