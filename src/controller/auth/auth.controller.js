@@ -1,5 +1,7 @@
-import { consoleError, handleError, handleSendResponse } from "../../utils/index.js"
+import bcrypt from 'bcrypt'
 import { validateSignUpResBody } from "../index.js"
+import { consoleError, handleError, handleSendResponse } from "../../utils/index.js"
+import { User } from "../../model/index.js"
 
 // handleLogin
 export const handleLogin = async (req, res) => {
@@ -15,8 +17,21 @@ export const handleLogin = async (req, res) => {
 // handleSignUp
 export const handleSignUp = async (req, res) => {
     try {
-        validateSignUpResBody(req)
-        handleSendResponse(res,201,"User Created Successfully",[{name:"Suraj Mourya"}])
+        const reqBody = validateSignUpResBody(req)
+        const { password } = reqBody;
+        // Hash password
+        const hashedPassword = await bcrypt.hash(password, Number(process.env.SALT_ROUND))
+        
+        // save user to DB
+        const user = new User({...reqBody, password:hashedPassword})
+        const savedUser = await user.save()
+
+        const responseData = {
+            _id:savedUser._id,
+            fullName:savedUser.fullName
+        }
+
+        handleSendResponse(res, 201, "User Created Successfully", responseData)
     } catch (error) {
         consoleError(error)
         const statusCode = error?.statusCode || 500
