@@ -1,5 +1,5 @@
-import { AppError } from "../../utils/index.js"
-import { allowedSignUpFields } from "../index.js"
+import { AppError } from "../utils/index.js"
+import { allowedSignUpFields } from "./index.js"
 import validator from 'validator'
 
 export const validateSignUpResBody = (req) => {

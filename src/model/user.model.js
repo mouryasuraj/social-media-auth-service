@@ -1,5 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcrypt'
+import { env } from '../config/index.js';
 
 const userSchema = new Schema({
     fullName: {
@@ -40,7 +41,7 @@ const userSchema = new Schema({
 )
 
 userSchema.methods.getHashedPassword =async function(password){
-    const hashedPassword = await bcrypt(password, process.env.SALT_ROUND)
+    const hashedPassword = await bcrypt(password, env.SALT_ROUND)
     return hashedPassword
 }
 

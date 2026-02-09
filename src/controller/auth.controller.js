@@ -1,7 +1,8 @@
 import bcrypt from 'bcrypt'
-import { validateSignUpResBody } from "../index.js"
-import { consoleError, handleError, handleSendResponse } from "../../utils/index.js"
-import { User } from "../../model/index.js"
+import { validateSignUpResBody } from "./index.js"
+import { consoleError, handleError, handleSendResponse } from "../utils/index.js"
+import { User } from "../model/index.js"
+import { env } from '../config/index.js'
 
 // handleLogin
 export const handleLogin = async (req, res) => {
@@ -20,7 +21,7 @@ export const handleSignUp = async (req, res) => {
         const reqBody = validateSignUpResBody(req)
         const { password } = reqBody;
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, Number(process.env.SALT_ROUND))
+        const hashedPassword = await bcrypt.hash(password, Number(env.SALT_ROUND))
         
         // save user to DB
         const user = new User({...reqBody, password:hashedPassword})

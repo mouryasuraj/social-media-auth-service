@@ -1,8 +1,6 @@
 import express from 'express'
-import dotenv from 'dotenv'
-import {connectDB} from './connections/index.js'
+import {connectDB, env} from './config/index.js'
 import { authRouter } from './routes/index.js'
-dotenv.config({path:`.env.${process.env.NODE_ENV}`})
 
 const app = express()
 
@@ -15,7 +13,7 @@ app.use("/auth", authRouter)
 connectDB().then(() => {
     console.log("DB Connection Established")
     app.listen(3000, () => {
-        console.log("Server is running on port: 3000")
+        console.log(`Server is running on port: ${env.PORT}`)
     })
 }).catch((error) => {
     console.log(error?.message)
