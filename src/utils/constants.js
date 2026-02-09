@@ -1,0 +1,1 @@
+export const emailOtpKey = 'email_otp'

@@ -1,6 +1,7 @@
 import express from 'express'
 import {connectDB, env} from './config/index.js'
 import { authRouter } from './routes/index.js'
+import { redis } from './config/redis.js';
 
 const app = express()
 

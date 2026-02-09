@@ -11,7 +11,8 @@ const userSchema = new Schema({
     email: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        unique: true
     },
     password: {
         type: String,
@@ -39,11 +40,6 @@ const userSchema = new Schema({
         timestamps: true
     }
 )
-
-userSchema.methods.getHashedPassword =async function(password){
-    const hashedPassword = await bcrypt(password, env.SALT_ROUND)
-    return hashedPassword
-}
 
 export const User = mongoose.model("User", userSchema)
 
