@@ -1,7 +1,8 @@
 import express from 'express'
-import { handleLogin, handleSendOTP } from '../controller/index.js';
+import { handleLogin, handleSendOTP, handleVerifyOTP } from '../controller/index.js';
 
 export const authRouter = express.Router()
 
 authRouter.post("/login",handleLogin)
-authRouter.post("/signup",handleSendOTP)
+authRouter.post("/sendotp",handleSendOTP)
+authRouter.post("/verifyotp",handleVerifyOTP)

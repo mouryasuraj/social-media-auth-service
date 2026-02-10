@@ -8,30 +8,35 @@ export const generateOTP = () => {
 }
 
 export const hashOTP = (otp) => {
-        if (!otp) throw new AppError("OTP is missing", 400)
-        const hashedOTP = crypto.createHash('sha256', env.SECRET_KEY).update(String(otp)).digest('hex');
-        return hashedOTP;
+    if (!otp) throw new AppError("OTP is missing", 400)
+    const hashedOTP = crypto.createHash('sha256', env.SECRET_KEY).update(String(otp)).digest('hex');
+    return hashedOTP;
 
 }
 
 export const storeOTP = async (email, payload) => {
-    // Error Handling
-    if (!email || !payload) throw new AppError("Email or Payload is missing", 400)
+    try {
+        if (!email || !payload) throw new AppError("Email or Payload is missing", 400)
 
 
-    const otp = generateOTP()
-    const hashedOtp = hashOTP(otp)
+        const otp = generateOTP()
+        const hashedOtp = hashOTP(otp)
 
-    const key = `email_otp:${email}`
-    const value = {
-        otpHashed: hashedOtp,
-        payload,
-        attempts: 0
+        const key = `email_otp:${email}`
+        const value = {
+            otpHashed: hashedOtp,
+            payload,
+            attempts: 0
+        }
+
+        // Save to redis
+        await redis.set(key, JSON.stringify(value), 'EX', Number(env.OTP_TTL))
+        return otp
+    } catch (error) {
+        throw new AppError("Something went wrong",400)
     }
+    // Error Handling
 
-    // Save to redis
-    await redis.set(key, JSON.stringify(value), { expiration: env.OTP_TTL })
-    return otp
 
 }
 
@@ -39,10 +44,13 @@ export const verifyOTP = async (email, otp) => {
     // Error Handling
     if (!email || !otp) throw new AppError("Email or otp is missing", 400)
 
-    const key = `${emailOtpKey}:${email}`
+    const key = `${emailOtpKey}:${email}`;
 
     // Get OTP data
     const data = await redis.get(key)
+
+    console.log("mai hu gyam",data)
+
     if (!data) return {
         valid: false,
         reason: "OTP is expired. Please resent it"
@@ -59,7 +67,7 @@ export const verifyOTP = async (email, otp) => {
     }
 
     // CHeck attempts
-    if (record?.attempts > Number(env?.OTP_MX_ATMPTS)) {
+    if (record?.attempts + 1 > Number(env?.OTP_MX_ATMPTS)) {
         await redis.del(key)
         return {
             valid: false,
@@ -69,6 +77,8 @@ export const verifyOTP = async (email, otp) => {
 
     // Verify OTP
     if (hashOTP(otp) !== record.otpHashed) {
+        record.attempts = record.attempts+1
+        await redis.set(key, JSON.stringify(record),{KEEPTTL:true})
         return {
             valid: false,
             reason: "Invalid OTP"
@@ -83,6 +93,7 @@ export const verifyOTP = async (email, otp) => {
         payload: record.payload
     }
 }
+
 
 
 

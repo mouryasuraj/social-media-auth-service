@@ -46,3 +46,17 @@ export const validateSignUpResBody = (req) => {
 
     return reqBody
 }
+
+
+export const validateVerifyOtpParams = (req) =>{
+    const params = req?.query
+    if(!params || !params?.email || !params?.otp){
+        throw new AppError("email or otp not found",400)
+    }
+
+    const {email} = params
+
+    if(!validator.isEmail(email)) throw new AppError("invalid email", 400)
+
+    return params
+}
