@@ -26,12 +26,13 @@ export const storeOTP = async (email, payload) => {
         const key = `email_otp:${email}`
         const value = {
             otpHashed: hashedOtp,
-            payload,
-            attempts: 0
+            attempts: 0,
+            payload:JSON.stringify(payload)
         }
 
         // Save to redis
-        await redis.set(key, JSON.stringify(value), {'EX': Number(env.OTP_TTL)})
+        await redis.hSet(key, value)
+        await redis.expire(key, Number(env.OTP_TTL))
         return otp
     } catch (error) {
         throw new AppError("Something went wrong",400)
@@ -47,17 +48,18 @@ export const verifyOTP = async (email, otp) => {
 
     const key = `${emailOtpKey}:${email}`;
 
-    // Get OTP data
-    const data = await redis.get(key)
+    
 
-    if (!data) return {
+    // Get OTP data
+    const data = await redis.hGetAll(key)
+
+    if (Object.keys(data).length === 0) return {
         valid: false,
         reason: "OTP is expired. Please resent it"
     }
 
     // Parsed Record
-    const record = JSON.parse(data)
-    if (!record?.otpHashed) {
+    if (!data?.otpHashed) {
         consoleError({ message: "Hashed OTP not found" })
         return {
             valid: false,
@@ -66,7 +68,7 @@ export const verifyOTP = async (email, otp) => {
     }
 
     // CHeck attempts
-    if (record?.attempts + 1 > Number(env?.OTP_MX_ATMPTS)) {
+    if (Number(data?.attempts) + 1 > Number(env?.OTP_MX_ATMPTS)) {
         await redis.del(key)
         return {
             valid: false,
@@ -75,9 +77,8 @@ export const verifyOTP = async (email, otp) => {
     }
 
     // Verify OTP
-    if (hashOTP(otp) !== record.otpHashed) {
-        record.attempts = record.attempts+1
-        await redis.set(key, JSON.stringify(record),{KEEPTTL:true})
+    if (hashOTP(otp) !== data.otpHashed) {
+        await redis.hIncrBy(key, "attempts", 1)
         return {
             valid: false,
             reason: "Invalid OTP"
@@ -88,7 +89,7 @@ export const verifyOTP = async (email, otp) => {
     await redis.del(key)
     return {
         valid: true,
-        payload: record.payload
+        payload: JSON.parse(data.payload)
     }
 }
 
