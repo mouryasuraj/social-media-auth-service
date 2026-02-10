@@ -1,0 +1,15 @@
+
+
+# How to integrate email service using brevo
+1. Create an account on brevo
+2. Create ENVs for configuration 
+    SMTP_KEY, SMTP_SERVER, SMTP_PORT,SMTP_LOGIN
+3. Install node-mailer
+
+# Use Upstash to self host redis
+
+
+
+## Services and Library
+1. Brevo - For Email and Notification
+2. 

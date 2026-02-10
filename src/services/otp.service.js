@@ -1,7 +1,8 @@
 import crypto from 'crypto'
-import { AppError, consoleError, emailOtpKey } from '../utils/index.js';
-import { env } from '../config/index.js';
+import { AppError, consoleError, emailOtpKey, emailOtpSubject } from '../utils/index.js';
+import { env, mailer } from '../config/index.js';
 import { redis } from '../config/redis.js';
+import { generateEmailStructure } from './index.js';
 
 export const generateOTP = () => {
     return Math.floor(Math.random() * 1000000 + 1)
@@ -30,7 +31,7 @@ export const storeOTP = async (email, payload) => {
         }
 
         // Save to redis
-        await redis.set(key, JSON.stringify(value), 'EX', Number(env.OTP_TTL))
+        await redis.set(key, JSON.stringify(value), {'EX': Number(env.OTP_TTL)})
         return otp
     } catch (error) {
         throw new AppError("Something went wrong",400)
@@ -48,8 +49,6 @@ export const verifyOTP = async (email, otp) => {
 
     // Get OTP data
     const data = await redis.get(key)
-
-    console.log("mai hu gyam",data)
 
     if (!data) return {
         valid: false,
@@ -87,13 +86,14 @@ export const verifyOTP = async (email, otp) => {
 
     // If Verified del key from redis
     await redis.del(key)
-
     return {
         valid: true,
         payload: record.payload
     }
 }
 
+
+export const sendOtpEmail = async (to, body) => await mailer.sendMail(generateEmailStructure(env.MAIL_FROM, to, emailOtpSubject, body))
 
 
 

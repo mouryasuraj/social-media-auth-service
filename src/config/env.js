@@ -11,4 +11,9 @@ export const env = {
     REDIS_URL:process.env.REDIS_URL,
     OTP_TTL:process.env.OTP_TTL,
     OTP_MX_ATMPTS:process.env.OTP_MX_ATMPTS,
+    SMTP_KEY:process.env.SMTP_KEY,
+    SMTP_SERVER:process.env.SMTP_SERVER,
+    SMTP_PORT:process.env.SMTP_PORT,
+    SMTP_LOGIN:process.env.SMTP_LOGIN,
+    MAIL_FROM:process.env.MAIL_FROM
 };

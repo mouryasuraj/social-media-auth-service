@@ -1,7 +1,7 @@
-export const handleSendResponse = (res,status,msg,data) =>{
-    const response = {message:msg, status:true}
+export const handleSendResponse = (res,statusCode,status,msg,data) =>{
+    const response = {message:msg, status:status}
     if(data){
         response["data"] = data
     }
-    res.status(status).json(response)
+    res.status(statusCode).json(response)
 }
