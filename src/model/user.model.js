@@ -34,6 +34,10 @@ const userSchema = new Schema({
     photoUrl: {
         type: String,
         trim: true
+    },
+    isEmailVerified: {
+        type: Boolean,
+        default:false
     }
 },
     {

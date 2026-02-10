@@ -74,7 +74,7 @@ export const handleVerifyOTP = async (req,res) =>{
 
         if(data.valid){
             // Create newUser
-            const newUser = new User(data?.payload)
+            const newUser = new User({...data?.payload, isEmailVerified:true})
             const savedUser = await newUser.save()
             const {fullName, email} = savedUser;
             const response = {fullName, email}
