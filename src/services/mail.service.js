@@ -9,3 +9,16 @@ export const generateEmailStructure = (from, to, subject, html)=>{
         html
     }
 }
+
+
+
+export const getNewUserEmailTemplate = (fullName, email) =>{
+    return `
+        <p>Welcome ${fullName},</p>
+        <br>
+        <p>Your account has been created successfully.</p>
+        <h3>email: ${email}</h3>
+        <p>Please login.</p>
+        <button>Login</button>
+    `
+}

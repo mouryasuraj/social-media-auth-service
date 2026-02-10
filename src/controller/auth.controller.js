@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt'
 import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams } from "./index.js"
-import { consoleError, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
+import { consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
 import { User } from "../model/index.js"
 import { env } from '../config/index.js'
-import { sendOtpEmail, storeOTP, verifyOTP } from '../services/index.js'
+import { getNewUserEmailTemplate, sendEmail, storeOTP, verifyOTP } from '../services/index.js'
 
 // handleLogin
 export const handleLogin = async (req, res) => {
@@ -47,7 +47,7 @@ export const handleSendOTP = async (req, res) => {
         `
 
         // send OTP on mail
-        await sendOtpEmail(email, emailBody)
+        await sendEmail(email, emailBody, emailOtpSubject)
             
         handleSendResponse(res, 200,true, "OTP sent successfully", otp) // send success response
 
@@ -76,10 +76,14 @@ export const handleVerifyOTP = async (req,res) =>{
             // Create newUser
             const newUser = new User(data?.payload)
             const savedUser = await newUser.save()
-            const response = {
-                email:savedUser.email,
-                fullName:savedUser.fullName
-            }
+            const {fullName, email} = savedUser;
+            const response = {fullName, email}
+
+            const emailbody = getNewUserEmailTemplate(fullName,email)
+
+            // Send User Created Successfull email
+            await sendEmail(email, emailbody, "Account Created Successfully")
+
             handleSendResponse(res,201,true,"OTP Verfied Succesfully. Account is created", response)
         }else{
             handleSendResponse(res,200,false,data.reason)

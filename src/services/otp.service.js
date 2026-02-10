@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { AppError, consoleError, emailOtpKey, emailOtpSubject } from '../utils/index.js';
+import { AppError, consoleError, emailOtpKey } from '../utils/index.js';
 import { env, mailer } from '../config/index.js';
 import { redis } from '../config/redis.js';
 import { generateEmailStructure } from './index.js';
@@ -93,7 +93,7 @@ export const verifyOTP = async (email, otp) => {
 }
 
 
-export const sendOtpEmail = async (to, body) => await mailer.sendMail(generateEmailStructure(env.MAIL_FROM, to, emailOtpSubject, body))
+export const sendEmail = async (to, body, subject) => await mailer.sendMail(generateEmailStructure(env.MAIL_FROM, to, subject, body))
 
 
 
