@@ -10,6 +10,7 @@ app.use(express.json())
 
 app.use("/auth", authRouter)
 
+
 // DB Connection
 connectDB().then(() => {
     console.log("DB Connection Established")

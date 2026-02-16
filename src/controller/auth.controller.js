@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody } from "./index.js"
-import { consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
+import { AppError, consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
 import { User } from "../model/index.js"
-import { env } from '../config/index.js'
+import { env, privateKey } from '../config/index.js'
 import { getNewUserEmailTemplate, sendEmail, storeOTP, verifyOTP } from '../services/index.js'
 
 // handleLogin
@@ -10,9 +11,28 @@ export const handleLogin = async (req, res) => {
     try {
         const reqBody = validateLoginResBody(req)
 
+        const {email, password} = reqBody;
+
+        // Check user existence
+        const user = await User.findOne({email})
+        if(!user) throw new AppError("User not found", 401)
+
+        // Verify password
+        const isPassValid = await user.isPasswordValid(password, user.password)
+        if(!isPassValid) throw new AppError("Invalid password", 401)
+
+        const privatek = privateKey
+
+        // Payload to put inside jwt token
+        const payload = {}
         
 
-        handleSendResponse(res, 200,true, "Logged in successfully",reqBody)
+        // Generate Token
+        const token = jwt.sign()
+
+        
+
+        handleSendResponse(res, 200,true, "Logged in successfully",user)
     } catch (error) {
         consoleError(error)
         const statusCode = error.statusCode || 500

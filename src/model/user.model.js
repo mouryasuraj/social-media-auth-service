@@ -1,6 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcrypt'
-import { env } from '../config/index.js';
 
 const userSchema = new Schema({
     fullName: {
@@ -44,6 +43,12 @@ const userSchema = new Schema({
         timestamps: true
     }
 )
+
+userSchema.methods.isPasswordValid = function(plainPassword, hashedPassword) {
+    const isPasswordValid = bcrypt.compare(plainPassword, hashedPassword)
+    return isPasswordValid
+}
+
 
 export const User = mongoose.model("User", userSchema)
 

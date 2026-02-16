@@ -39,7 +39,7 @@ export const validateLoginResBody = (req) =>{
     }
 
 
-    return reqBody
+    return {email:email.trim(), password:password.trim()}
 
 }
 
