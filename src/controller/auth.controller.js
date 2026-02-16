@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt'
+import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody } from "./index.js"
 import { AppError, consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
@@ -45,10 +46,12 @@ export const handleLogin = async (req, res) => {
             issuer:env.ISSUER
         })
 
+        const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex')
+
         // Save refresh token in DB
         const newRefreshToken = new RefreshToken({
             userId:id,
-            token:refreshToken,
+            token:hashedRefreshToken,
             expiresAt:new Date(Date.now() + 7*24*60*60*1000)
         })
         await newRefreshToken.save()
@@ -159,17 +162,34 @@ export const handleVerifyOTP = async (req,res) =>{
 }
 
 
-// HandleLogout
-export const handleLogout = (req,res) =>{
-    try {
 
-        res.clearCookie("accessToken").clearCookie("refreshToken")
+// Handle RefreshToken
+export const handleRefreshToken = async (req,res) =>{
+    try {
+        console.log("refredefedasfdsfsdfsf")
+    } catch (error) {
+        
+    }
+}
+
+
+// HandleLogout
+export const handleLogout = async (req,res) =>{
+    try {
+        const refToken = req.cookies.refreshToken
+        if(refToken){
+            const decode = jwt.decode(refToken)
+            await RefreshToken.deleteOne({userId:decode.sub})
+        }
+
+        res.clearCookie("accessToken")
+        res.clearCookie("refreshToken")
 
         handleSendResponse(res,200, true, "Logged out successfully")
         
     } catch (error) {
         consoleError(error)
-        handleError(res,400, error.message)
+            handleError(res,500, "Logout failed")
     }
 }
 

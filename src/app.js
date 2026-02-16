@@ -2,11 +2,13 @@ import express from 'express'
 import {connectDB, env} from './config/index.js'
 import { authRouter } from './routes/index.js'
 import { redis } from './config/redis.js';
+import cookieParser from 'cookie-parser'
 
 const app = express()
 
 // Middleware
 app.use(express.json())
+app.use(cookieParser())
 
 app.use("/auth", authRouter)
 
