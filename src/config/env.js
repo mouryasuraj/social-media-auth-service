@@ -15,5 +15,8 @@ export const env = {
     SMTP_SERVER:process.env.SMTP_SERVER,
     SMTP_PORT:process.env.SMTP_PORT,
     SMTP_LOGIN:process.env.SMTP_LOGIN,
-    MAIL_FROM:process.env.MAIL_FROM
+    MAIL_FROM:process.env.MAIL_FROM,
+    ISSUER:process.env.ISSUER,
+    AUDIENCE:process.env.AUDIENCE,
+    COOKIE_SECURE:process.env.COOKIE_SECURE,
 };

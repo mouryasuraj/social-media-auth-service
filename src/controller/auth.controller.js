@@ -2,13 +2,14 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody } from "./index.js"
 import { AppError, consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
-import { User } from "../model/index.js"
+import { User, RefreshToken} from "../model/index.js"
 import { env, privateKey } from '../config/index.js'
 import { getNewUserEmailTemplate, sendEmail, storeOTP, verifyOTP } from '../services/index.js'
 
 // handleLogin
 export const handleLogin = async (req, res) => {
     try {
+
         const reqBody = validateLoginResBody(req)
 
         const {email, password} = reqBody;
@@ -21,18 +22,55 @@ export const handleLogin = async (req, res) => {
         const isPassValid = await user.isPasswordValid(password, user.password)
         if(!isPassValid) throw new AppError("Invalid password", 401)
 
-        const privatek = privateKey
+        const id = user?._id.toString()
 
         // Payload to put inside jwt token
-        const payload = {}
+        const payload = {
+            sub: id,
+            email:user.email
+        }
+
+        // Access Token
+        const accessToken = jwt.sign(payload, privateKey, {
+            algorithm:'RS256',
+            expiresIn:'15m',
+            issuer:env.ISSUER,
+            audience:env.AUDIENCE,
+        })
+
+        // Refresh Token
+        const refreshToken = jwt.sign({sub:id}, privateKey, {
+            algorithm:'RS256',
+            expiresIn:"7d",
+            issuer:env.ISSUER
+        })
+
+        // Save refresh token in DB
+        const newRefreshToken = new RefreshToken({
+            userId:id,
+            token:refreshToken,
+            expiresAt:new Date(Date.now() + 7*24*60*60*1000)
+        })
+        await newRefreshToken.save()
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly:true,
+            secure:env.COOKIE_SECURE==="true",
+            sameSite:"Strict",
+            maxAge:15*60*1000  // 15 Min Expiry
+        }).cookie('refreshToken', refreshToken, {
+            httpOnly:true,
+            secure:env.COOKIE_SECURE==="true",
+            sameSite:"Strict",
+            maxAge:7*24*60*60*1000  // 7 Days Expiry
+        })
+
+        const userData = {
+            userId:id,
+            email:user.email
+        }
         
-
-        // Generate Token
-        const token = jwt.sign()
-
-        
-
-        handleSendResponse(res, 200,true, "Logged in successfully",user)
+        handleSendResponse(res, 200,true, "Logged in successfully",userData)
     } catch (error) {
         consoleError(error)
         const statusCode = error.statusCode || 500
@@ -117,6 +155,21 @@ export const handleVerifyOTP = async (req,res) =>{
         consoleError(error)
         const statusCode = error?.statusCode || 500
         handleError(res,statusCode,somethingWentWrongTxt)
+    }
+}
+
+
+// HandleLogout
+export const handleLogout = (req,res) =>{
+    try {
+
+        res.clearCookie("accessToken").clearCookie("refreshToken")
+
+        handleSendResponse(res,200, true, "Logged out successfully")
+        
+    } catch (error) {
+        consoleError(error)
+        handleError(res,400, error.message)
     }
 }
 
