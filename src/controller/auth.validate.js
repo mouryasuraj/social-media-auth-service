@@ -1,22 +1,64 @@
-import { AppError } from "../utils/index.js"
-import { allowedSignUpFields } from "./index.js"
+import { AppError, consoleError } from "../utils/index.js"
+import { allowedSignUpFields, reqBodyNotPresentTxt, allowedLoginFields, unauthorizedAccessTxt } from "./index.js"
 import validator from 'validator'
 
+export const validateLoginResBody = (req) =>{
+    // Validate Reqbody
+    if(!req?.body || Object.keys(req?.body || {}).length===0) throw new AppError(reqBodyNotPresentTxt, 400)
+    
+    const reqBody = req.body
+    const reqBodyFields = Object.keys(reqBody)
+
+    // Validate Reqbody fields
+    const extraFields = reqBodyFields.filter((d) => !allowedLoginFields.includes(d));
+    const isMissingFields = !allowedLoginFields.every(d => reqBodyFields.includes(d))
+
+    // Validate Extrafields
+    if(extraFields.length!==0){
+        consoleError({message:`fields are not allowed: [${extraFields.join(", ")}]`})
+        throw new AppError(unauthorizedAccessTxt,401)
+    } 
+    // Validate Missing Fields
+    if(isMissingFields){
+        consoleError({message:`Required fields are missing: [${allowedLoginFields.join(", ")}]`})
+        throw new AppError(unauthorizedAccessTxt,401)
+    } 
+
+    const {email, password} = reqBody
+    const loginValidation = [
+        {isValid:!email, message:"Please provide email"},
+        {isValid:!validator.isEmail(email), message:"Please provide valid email"},
+        {isValid:!password, message:"Please provide password"},
+    ]
+
+    for(const check of loginValidation){
+        if(check.isValid){
+            consoleError({message:check?.message})
+            throw new AppError(unauthorizedAccessTxt, 401)
+        }
+    }
+
+
+    return reqBody
+
+}
+
+
 export const validateSignUpResBody = (req) => {
-    if (!req?.body || Object.keys(req?.body || {}).length === 0) throw new AppError("Request body is not present", 400)
+    if (!req?.body || Object.keys(req?.body || {}).length === 0) throw new AppError(reqBodyNotPresentTxt, 400)
 
     const reqBody = req.body
     const reqBodyFields = Object.keys(reqBody)
 
     const extraFields = reqBodyFields.filter(f => !allowedSignUpFields.includes(f))
-    const missingFields = !allowedSignUpFields.every(f => reqBodyFields.includes(f))
+    const isMissingFields = !allowedSignUpFields.every(f => reqBodyFields.includes(f))
 
     if (extraFields.length > 0) {
-        const errorMsg = `fields are not allowed: [${extraFields.map(f => f).join(", ")}]`
+        const errorMsg = `fields are not allowed: [${extraFields.join(", ")}]`
         throw new AppError(errorMsg, 400)
     }
-    if (missingFields) {
-        const errorMsg = `Required fields are missing`
+    if (isMissingFields) {
+        const errorMsg = `Required fields are missing: ${allowedSignUpFields.join(", ")}`
         throw new AppError(errorMsg, 400)
     }
 

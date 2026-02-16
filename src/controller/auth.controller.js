@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams } from "./index.js"
+import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody } from "./index.js"
 import { consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
 import { User } from "../model/index.js"
 import { env } from '../config/index.js'
@@ -8,11 +8,15 @@ import { getNewUserEmailTemplate, sendEmail, storeOTP, verifyOTP } from '../serv
 // handleLogin
 export const handleLogin = async (req, res) => {
     try {
-        console.log("Calling login this function", req.body)
-        handleSendResponse(res, 200,true, "Logged in successfully")
+        const reqBody = validateLoginResBody(req)
+
+        
+
+        handleSendResponse(res, 200,true, "Logged in successfully",reqBody)
     } catch (error) {
         consoleError(error)
-        handleError(res, 401, error.message)
+        const statusCode = error.statusCode || 500
+        handleError(res, statusCode, error.message)
     }
 }
 
