@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody } from "./index.js"
+import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody, unauthorizedAccessTxt } from "./index.js"
 import { AppError, consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
 import { User, RefreshToken} from "../model/index.js"
 import { env, privateKey } from '../config/index.js'
@@ -40,7 +40,7 @@ export const handleLogin = async (req, res) => {
         })
 
         // Refresh Token
-        const refreshToken = jwt.sign({sub:id}, privateKey, {
+        const refreshToken = jwt.sign(payload, privateKey, {
             algorithm:'RS256',
             expiresIn:"7d",
             issuer:env.ISSUER
@@ -166,9 +166,38 @@ export const handleVerifyOTP = async (req,res) =>{
 // Handle RefreshToken
 export const handleRefreshToken = async (req,res) =>{
     try {
-        console.log("refredefedasfdsfsdfsf")
+        const user = req.user
+        if(!user) throw new AppError("User data not found", 401)
+
+            console.log(user)
+
+        const payload = {
+            sub:user.sub,
+            email:user.email
+        }
+
+        const newAccessToken = jwt.sign(payload, privateKey, {
+            algorithm:'RS256',
+            expiresIn:"15m",
+            issuer:env.ISSUER,
+            audience:env.AUDIENCE
+        })
+
+        console.log(newAccessToken)
+
+        res.cookie("accessToken", newAccessToken, {
+            httpOnly:true,
+            secure:env.COOKIE_SECURE==="true",
+            sameSite:"Strict",
+            maxAge:15*60*1000  // 15min
+        })
+
+        handleSendResponse(res,200,true,"Access token generated successfully")
+
+
     } catch (error) {
-        
+        consoleError(error)
+        handleError(res,401,unauthorizedAccessTxt)
     }
 }
 

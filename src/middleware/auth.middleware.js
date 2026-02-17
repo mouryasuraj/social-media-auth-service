@@ -34,12 +34,9 @@ export const refreshTokenMiddleware = async (req,res,next) =>{
         const refreshToken = req.cookies.refreshToken;
         if(!refreshToken) throw new AppError("Refresh token not found", 401)
 
-        
-
         const decoded = jwt.verify(refreshToken, publicKey, {
             algorithms:'RS256',
             issuer:env.ISSUER,
-            audience:env.AUDIENCE
         })
 
         const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex')
