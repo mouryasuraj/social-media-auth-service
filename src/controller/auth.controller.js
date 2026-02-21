@@ -70,14 +70,15 @@ export const handleLogin = async (req, res) => {
 
         const userData = {
             userId:id,
-            email:user.email
+            email:user.email,
+            isEmailVerified:user.isEmailVerified
         }
         
         handleSendResponse(res, 200,true, "Logged in successfully",userData)
     } catch (error) {
         consoleError(error)
         const statusCode = error.statusCode || 500
-        handleError(res, statusCode, error.message)
+        handleError(res, statusCode, "Invalid credentials")
     }
 }
 

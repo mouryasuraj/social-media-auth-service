@@ -3,12 +3,20 @@ import {connectDB, env} from './config/index.js'
 import { authRouter } from './routes/index.js'
 import { redis } from './config/redis.js';
 import cookieParser from 'cookie-parser'
+import cors from 'cors'
+import { allowedHeaders, allowedMethods } from './utils/constants.js';
 
 const app = express()
 
 // Middleware
 app.use(express.json())
 app.use(cookieParser())
+app.use(cors({
+    origin:env.CLIENT_URL,
+    credentials:true,
+    methods: allowedMethods,
+    allowedHeaders: allowedHeaders
+}))
 
 app.use("/auth", authRouter)
 

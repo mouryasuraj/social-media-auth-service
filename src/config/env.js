@@ -5,6 +5,7 @@ dotenv.config({ path: `.env.${process?.env?.NODE_ENV || "local"}` })
 export const env = {
     MONGODB_URI: process.env.MONGODB_URI,
     SECRET_KEY: process.env.SECRET_KEY,
+    CLIENT_URL: process.env.CLIENT_URL,
     SALT_ROUND: process.env.SALT_ROUND,
     PORT: process.env.PORT,
     NODE_ENV:process.env.NODE_ENV,
