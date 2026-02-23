@@ -2,9 +2,9 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody, unauthorizedAccessTxt } from "./index.js"
-import { AppError, consoleError, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
+import { AppError, consoleError, emailOtpKey, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
 import { User, RefreshToken} from "../model/index.js"
-import { env, privateKey } from '../config/index.js'
+import { env, privateKey, redis } from '../config/index.js'
 import { getNewUserEmailTemplate, sendEmail, storeOTP, verifyOTP } from '../services/index.js'
 
 // handleLogin
@@ -145,10 +145,15 @@ export const handleVerifyOTP = async (req,res) =>{
             const {fullName, email} = savedUser;
             const response = {fullName, email}
 
+            // Delete key from redis
+            const key = `${emailOtpKey}:${email}`;
+            await redis.del(key)
+
             const emailbody = getNewUserEmailTemplate(fullName,email)
 
             // Send User Created Successfull email
             await sendEmail(email, emailbody, "Account Created Successfully")
+            
 
             handleSendResponse(res,201,true,"OTP Verfied Succesfully. Account is created", response)
         }else{

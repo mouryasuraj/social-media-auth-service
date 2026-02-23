@@ -84,9 +84,7 @@ export const verifyOTP = async (email, otp) => {
             reason: "Invalid OTP"
         }
     }
-
-    // If Verified del key from redis
-    await redis.del(key)
+    
     return {
         valid: true,
         payload: JSON.parse(data.payload)
