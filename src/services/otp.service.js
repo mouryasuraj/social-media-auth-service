@@ -3,6 +3,7 @@ import { AppError, consoleError, emailOtpKey } from '../utils/index.js';
 import { env, mailer } from '../config/index.js';
 import { redis } from '../config/redis.js';
 import { generateEmailStructure } from './index.js';
+import { maxAttemp } from '../controller/auth.constants.js';
 
 export const generateOTP = () => {
     return Math.floor(Math.random() * 1000000 + 1)
@@ -72,7 +73,7 @@ export const verifyOTP = async (email, otp) => {
         await redis.del(key)
         return {
             valid: false,
-            reason: "Max Attempts reached. Account is blocked. Please contact your admin."
+            reason: maxAttemp
         }
     }
 

@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody, unauthorizedAccessTxt } from "./index.js"
+import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody, unauthorizedAccessTxt, maxAttemp } from "./index.js"
 import { AppError, consoleError, emailOtpKey, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
 import { User, RefreshToken} from "../model/index.js"
 import { env, privateKey, redis } from '../config/index.js'
@@ -157,7 +157,8 @@ export const handleVerifyOTP = async (req,res) =>{
 
             handleSendResponse(res,201,true,"OTP Verfied Succesfully. Account is created", response)
         }else{
-            handleSendResponse(res,200,false,data.reason)
+            const status = data.message===maxAttemp ? 403: 200
+            handleSendResponse(res,status,false,data.reason)
         }
         
     } catch (error) {
