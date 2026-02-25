@@ -157,7 +157,7 @@ export const handleVerifyOTP = async (req,res) =>{
 
             handleSendResponse(res,201,true,"OTP Verfied Succesfully. Account is created", response)
         }else{
-            const status = data.message===maxAttemp ? 403: 200
+            const status = data.reason===maxAttemp ? 403: 200
             handleSendResponse(res,status,false,data.reason)
         }
         
