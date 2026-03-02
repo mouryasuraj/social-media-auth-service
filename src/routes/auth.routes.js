@@ -1,5 +1,5 @@
 import express from 'express'
-import { handleLogin, handleSendOTP, handleVerifyOTP, handleLogout,handleRefreshToken } from '../controller/index.js';
+import { handleLogin, handleSendOTP, handleVerifyOTP, handleLogout,handleRefreshToken, handleVerifyToken } from '../controller/index.js';
 import { authMiddleware, refreshTokenMiddleware } from '../middleware/index.js';
 
 export const authRouter = express.Router()
@@ -9,3 +9,4 @@ authRouter.post("/sendotp",handleSendOTP)
 authRouter.post("/verifyotp",handleVerifyOTP)
 authRouter.get("/logout",handleLogout)
 authRouter.get("/refreshtoken",refreshTokenMiddleware,handleRefreshToken)
+authRouter.get("/verifytoken",authMiddleware,handleVerifyToken)

@@ -1,0 +1,2 @@
+1. Block user when OTP attempts exceed or wrong password attempts entered
+2. Add resend OTP functionality
