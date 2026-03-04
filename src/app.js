@@ -5,8 +5,10 @@ import { redis } from './config/redis.js';
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import { allowedHeaders, allowedMethods } from './utils/constants.js';
+import { connectProducer, disconnectProducer } from './messaging/producer/producer.js';
 
 const app = express()
+
 
 // Middleware
 app.use(express.json())
@@ -22,11 +24,18 @@ app.use("/auth", authRouter)
 
 
 // DB Connection
-connectDB().then(() => {
+connectDB().then(async() => {
     console.log("DB Connection Established")
-    app.listen(3000, () => {
+    await connectProducer()
+    app.listen(env.PORT, () => {
         console.log(`Server is running on port: ${env.PORT}`)
     })
 }).catch((error) => {
     console.log(error?.message)
+})
+
+// Disconnect Kafka
+process.on('SIGINT',async()=>{
+    await disconnectProducer()
+    process.exit()
 })

@@ -6,6 +6,7 @@ import { AppError, consoleError, emailOtpKey, emailOtpSubject, getStandardErrorM
 import { User, RefreshToken } from "../model/index.js"
 import { env, privateKey, redis } from '../config/index.js'
 import { getNewUserEmailTemplate, sendEmail, storeOTP, verifyOTP } from '../services/index.js'
+import { sentOtpEvent } from '../messaging/producer/otp.producer.js'
 
 // handleLogin
 export const handleLogin = async (req, res) => {
@@ -106,14 +107,14 @@ export const handleSendOTP = async (req, res) => {
             throw new AppError(somethingWentWrongTxt, 400)
         }
 
+
         const emailBody = `<p>Your email verification OTP is</p>
             <h2>${otp}</h2>
             <p>This OTP will expire in ${Number(env.OTP_TTL) / 60} minutes.</p>
             <p>If you didn't request this, please contact your admin.</p>
         `
-
-        // send OTP on mail
-        await sendEmail(email, emailBody, emailOtpSubject)
+        
+        await sentOtpEvent({email, otp, emailBody})
 
         handleSendResponse(res, 200, true, "OTP sent successfully", otp) // send success response
 

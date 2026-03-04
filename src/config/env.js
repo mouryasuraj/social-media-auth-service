@@ -20,4 +20,5 @@ export const env = {
     ISSUER:process.env.ISSUER,
     AUDIENCE:process.env.AUDIENCE,
     COOKIE_SECURE:process.env.COOKIE_SECURE,
+    KAFKA_BROKER:process.env.KAFKA_BROKER,
 };
