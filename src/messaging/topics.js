@@ -1,3 +1,3 @@
 export const TOPICS = {
-  SEND_OTP: "send-otp"
+  MAIL_ALERT:'mail-alert'
 };

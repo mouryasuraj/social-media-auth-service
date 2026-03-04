@@ -2,11 +2,11 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody, unauthorizedAccessTxt, maxAttemp } from "./index.js"
-import { AppError, consoleError, emailOtpKey, emailOtpSubject, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
+import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
 import { User, RefreshToken } from "../model/index.js"
 import { env, privateKey, redis } from '../config/index.js'
-import { getNewUserEmailTemplate, sendEmail, storeOTP, verifyOTP } from '../services/index.js'
-import { sentOtpEvent } from '../messaging/producer/otp.producer.js'
+import { storeOTP, verifyOTP } from '../services/index.js'
+import { sendMailEvent } from '../messaging/producer/mail.producer.js'
 
 // handleLogin
 export const handleLogin = async (req, res) => {
@@ -106,15 +106,8 @@ export const handleSendOTP = async (req, res) => {
             consoleError({ message: "OTP not found" })
             throw new AppError(somethingWentWrongTxt, 400)
         }
-
-
-        const emailBody = `<p>Your email verification OTP is</p>
-            <h2>${otp}</h2>
-            <p>This OTP will expire in ${Number(env.OTP_TTL) / 60} minutes.</p>
-            <p>If you didn't request this, please contact your admin.</p>
-        `
         
-        await sentOtpEvent({email, otp, emailBody})
+        await sendMailEvent({email, otp,eventType:"SEND_OTP"})
 
         handleSendResponse(res, 200, true, "OTP sent successfully", otp) // send success response
 
@@ -150,11 +143,7 @@ export const handleVerifyOTP = async (req, res) => {
             const key = `${emailOtpKey}:${email}`;
             await redis.del(key)
 
-            const emailbody = getNewUserEmailTemplate(fullName, email)
-
-            // Send User Created Successfull email
-            await sendEmail(email, emailbody, "Account Created Successfully")
-
+            await sendMailEvent({email,fullName, eventType:"NEW_USER_ACC"})
 
             handleSendResponse(res, 201, true, "OTP Verfied Succesfully. Account is created", response)
         } else {

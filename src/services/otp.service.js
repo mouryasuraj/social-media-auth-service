@@ -1,8 +1,7 @@
 import crypto from 'crypto'
 import { AppError, consoleError, emailOtpKey } from '../utils/index.js';
-import { env, mailer } from '../config/index.js';
+import { env } from '../config/index.js';
 import { redis } from '../config/redis.js';
-import { generateEmailStructure } from './index.js';
 import { maxAttemp } from '../controller/auth.constants.js';
 
 export const generateOTP = () => {
@@ -92,8 +91,6 @@ export const verifyOTP = async (email, otp) => {
     }
 }
 
-
-export const sendEmail = async (to, body, subject) => await mailer.sendMail(generateEmailStructure(env.MAIL_FROM, to, subject, body))
 
 
 
