@@ -1,5 +1,5 @@
 import { AppError, consoleError } from "../utils/index.js"
-import { allowedSignUpFields, reqBodyNotPresentTxt, allowedLoginFields, unauthorizedAccessTxt } from "./index.js"
+import { allowedSignUpFields, reqBodyNotPresentTxt, allowedLoginFields, unauthorizedAccessTxt } from "../utils/index.js"
 import validator from 'validator'
 
 export const validateLoginResBody = (req) =>{

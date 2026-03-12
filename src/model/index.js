@@ -1,2 +1,2 @@
-export * from "./user.model.js"
+export * from "./authuser.model.js"
 export * from "./refreshtoken.model.js"

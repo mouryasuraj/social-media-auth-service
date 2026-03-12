@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import { env, publicKey } from "../config/index.js"
-import { unauthorizedAccessTxt } from "../controller/index.js"
-import { RefreshToken, User } from "../model/index.js"
+import { unauthorizedAccessTxt } from "../utils/index.js"
+import { RefreshToken, AuthUser } from "../model/index.js"
 import { AppError, consoleError, handleError } from "../utils/index.js"
 import jwt from 'jsonwebtoken'
 
@@ -19,7 +19,7 @@ export const authMiddleware = async (req, res, next) => {
         if (!decoded) throw new AppError("User id not found in token", 401)
 
         const { email } = decoded
-        const user = await User.findOne({ email })
+        const user = await AuthUser.findOne({ email })
         if (!user) throw new AppError("User not found", 401)
 
         req.user = {

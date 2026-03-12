@@ -1,8 +1,7 @@
 import crypto from 'crypto'
-import { AppError, consoleError, emailOtpKey } from '../utils/index.js';
+import { AppError, consoleError, emailOtpKey, maxAttemp } from '../utils/index.js';
 import { env } from '../config/index.js';
 import { redis } from '../config/redis.js';
-import { maxAttemp } from '../controller/auth.constants.js';
 
 export const generateOTP = () => {
     return Math.floor(Math.random() * 1000000 + 1)

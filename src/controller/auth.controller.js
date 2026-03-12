@@ -1,9 +1,9 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import { emailAlreadyExistsTxt, validateSignUpResBody, somethingWentWrongTxt, validateVerifyOtpParams, validateLoginResBody, unauthorizedAccessTxt, maxAttemp } from "./index.js"
-import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse, } from "../utils/index.js"
-import { User, RefreshToken } from "../model/index.js"
+import { validateSignUpResBody, validateVerifyOtpParams, validateLoginResBody } from "./index.js"
+import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse,emailAlreadyExistsTxt,maxAttemp,somethingWentWrongTxt,unauthorizedAccessTxt } from "../utils/index.js"
+import { AuthUser, RefreshToken } from "../model/index.js"
 import { env, privateKey, redis } from '../config/index.js'
 import { storeOTP, verifyOTP } from '../services/index.js'
 import { sendMailEvent } from '../messaging/producer/mail.producer.js'
@@ -17,11 +17,11 @@ export const handleLogin = async (req, res) => {
         const { email, password } = reqBody;
 
         // Check user existence
-        const user = await User.findOne({ email })
+        const user = await AuthUser.findOne({ email })
         if (!user) throw new AppError("User not found", 401)
 
         // Verify password
-        const isPassValid = await user.isPasswordValid(password, user.password)
+        const isPassValid = await user.isPasswordValid(password)
         if (!isPassValid) throw new AppError("Invalid password", 401)
 
         const id = user?._id.toString()
@@ -90,7 +90,7 @@ export const handleSendOTP = async (req, res) => {
         const { email, password } = reqBody;
 
         // Check user already exists or not
-        const existingUser = await User.findOne({ email })
+        const existingUser = await AuthUser.findOne({ email })
         if (existingUser) {
             return handleError(res, 409, emailAlreadyExistsTxt)
         }
@@ -107,7 +107,7 @@ export const handleSendOTP = async (req, res) => {
             throw new AppError(somethingWentWrongTxt, 400)
         }
         
-        await sendMailEvent({email, otp,eventType:"SEND_OTP"})
+        await sendMailEvent({email, otp, eventType:"SEND_OTP"})
 
         handleSendResponse(res, 200, true, "OTP sent successfully", otp) // send success response
 
@@ -134,7 +134,7 @@ export const handleVerifyOTP = async (req, res) => {
 
         if (data.valid) {
             // Create newUser
-            const newUser = new User({ ...data?.payload, isEmailVerified: true })
+            const newUser = new AuthUser({ ...data?.payload, isEmailVerified: true })
             const savedUser = await newUser.save()
             const { fullName, email } = savedUser;
             const response = { fullName, email }
