@@ -2,7 +2,7 @@ import { AppError, consoleError } from "../utils/index.js"
 import { allowedSignUpFields, reqBodyNotPresentTxt, allowedLoginFields, unauthorizedAccessTxt } from "../utils/index.js"
 import validator from 'validator'
 
-export const validateLoginResBody = (req) =>{
+export const validateLoginReqBody = (req) =>{
     // Validate Reqbody
     if(!req?.body || Object.keys(req?.body || {}).length===0) throw new AppError(reqBodyNotPresentTxt, 400)
     
@@ -44,19 +44,19 @@ export const validateLoginResBody = (req) =>{
 }
 
 
-export const validateSignUpResBody = (req) => {
+export const validateSignUpReqBody = (req) => {
     if (!req?.body || Object.keys(req?.body || {}).length === 0) throw new AppError(reqBodyNotPresentTxt, 400)
 
     const reqBody = req.body
     const reqBodyFields = Object.keys(reqBody)
 
     const extraFields = reqBodyFields.filter(f => !allowedSignUpFields.includes(f))
-    const isMissingFields = !allowedSignUpFields.every(f => reqBodyFields.includes(f))
-
     if (extraFields.length > 0) {
         const errorMsg = `fields are not allowed: [${extraFields.join(", ")}]`
         throw new AppError(errorMsg, 400)
     }
+
+    const isMissingFields = !allowedSignUpFields.every(f => reqBodyFields.includes(f))
     if (isMissingFields) {
         const errorMsg = `Required fields are missing: ${allowedSignUpFields.join(", ")}`
         throw new AppError(errorMsg, 400)

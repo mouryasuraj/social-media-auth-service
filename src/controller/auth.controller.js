@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import { validateSignUpResBody, validateVerifyOtpParams, validateLoginResBody } from "./index.js"
+import { validateSignUpReqBody, validateVerifyOtpParams, validateLoginReqBody } from "./index.js"
 import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse,emailAlreadyExistsTxt,maxAttemp,somethingWentWrongTxt,unauthorizedAccessTxt } from "../utils/index.js"
 import { AuthUser, RefreshToken } from "../model/index.js"
 import { env, privateKey, redis } from '../config/index.js'
@@ -12,7 +12,7 @@ import { sendMailEvent } from '../messaging/producer/mail.producer.js'
 export const handleLogin = async (req, res) => {
     try {
 
-        const reqBody = validateLoginResBody(req)
+        const reqBody = validateLoginReqBody(req)
 
         const { email, password } = reqBody;
 
@@ -86,7 +86,7 @@ export const handleLogin = async (req, res) => {
 // handleSendOTP
 export const handleSendOTP = async (req, res) => {
     try {
-        const reqBody = validateSignUpResBody(req)
+        const reqBody = validateSignUpReqBody(req)
         const { email, password } = reqBody;
 
         // Check user already exists or not
