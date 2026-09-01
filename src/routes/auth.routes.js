@@ -10,3 +10,6 @@ authRouter.post("/verifyotp",handleVerifyOTP)
 authRouter.get("/logout",handleLogout)
 authRouter.get("/refreshtoken",refreshTokenMiddleware,handleRefreshToken)
 authRouter.get("/verifytoken",authMiddleware,handleVerifyToken)
+authRouter.get("/user",authMiddleware,(req,res)=>{
+    res.json({message:"Succesfully"})
+})

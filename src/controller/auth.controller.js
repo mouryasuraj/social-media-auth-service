@@ -35,7 +35,7 @@ export const handleLogin = async (req, res) => {
         // Access Token
         const accessToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
-            expiresIn: '15m',
+            expiresIn: '1m',
             issuer: env.ISSUER,
             audience: env.AUDIENCE,
         })
@@ -44,7 +44,8 @@ export const handleLogin = async (req, res) => {
         const refreshToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
             expiresIn: "7d",
-            issuer: env.ISSUER
+            issuer: env.ISSUER,
+            audience: env.AUDIENCE,
         })
 
         const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex')
@@ -61,7 +62,7 @@ export const handleLogin = async (req, res) => {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
             sameSite: "Strict",
-            maxAge: 15 * 60 * 1000  // 15 Min Expiry
+            maxAge: 1 * 60 * 1000  // 15 Min Expiry
         }).cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
@@ -166,7 +167,8 @@ export const handleRefreshToken = async (req, res) => {
         const user = req.user
         if (!user) throw new AppError("User data not found", 401)
 
-        console.log(user)
+
+            console.log("Helllo refresh token")
 
         const payload = {
             sub: user.sub,
@@ -175,18 +177,37 @@ export const handleRefreshToken = async (req, res) => {
 
         const newAccessToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
-            expiresIn: "15m",
+            expiresIn: "1m",
             issuer: env.ISSUER,
             audience: env.AUDIENCE
         })
 
-        console.log(newAccessToken)
+        const newRefreshToken = jwt.sign({sub:user.sub}, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: "7d",
+            issuer: env.ISSUER,
+            audience: env.AUDIENCE
+        })
+
+        const hashedRefreshToken = crypto.createHash("sha256").update(newRefreshToken).digest("hex")
+
+        await RefreshToken.findByIdAndUpdate(req.storedToken._id, {
+            token: hashedRefreshToken,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        })
+
+        console.log("stored old hash")
 
         res.cookie("accessToken", newAccessToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
             sameSite: "Strict",
-            maxAge: 15 * 60 * 1000  // 15min
+            maxAge: 1 * 60 * 1000  // 15min
+        }).cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: env.COOKIE_SECURE === "true",
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000  // 7 Days Expiry
         })
 
         handleSendResponse(res, 200, true, "Access token generated successfully")

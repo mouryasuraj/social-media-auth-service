@@ -12,13 +12,14 @@ export const authMiddleware = async (req, res, next) => {
         if (!accessToken) throw new AppError("Access token not found", 401)
 
         const decoded = jwt.verify(accessToken, publicKey, {
-            algorithms: 'RS256',
+            algorithms: ['RS256'],
             issuer: env.ISSUER,
             audience: env.AUDIENCE
         })
         if (!decoded) throw new AppError("User id not found in token", 401)
 
         const { email } = decoded
+        console.log(email)
         const user = await AuthUser.findOne({ email })
         if (!user) throw new AppError("User not found", 401)
 
@@ -43,9 +44,12 @@ export const refreshTokenMiddleware = async (req, res, next) => {
         if (!refreshToken) throw new AppError("Refresh token not found", 401)
 
         const decoded = jwt.verify(refreshToken, publicKey, {
-            algorithms: 'RS256',
+            algorithms: ['RS256'],
             issuer: env.ISSUER,
+            audience: env.AUDIENCE
         })
+
+        if (!decoded) throw new AppError("User id not found in token", 401)
 
         const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex')
 
@@ -54,6 +58,8 @@ export const refreshTokenMiddleware = async (req, res, next) => {
         if (!storedToken) throw new AppError("Refresh token expired", 401)
 
         req.user = decoded
+        req.refreshToken = refreshToken,
+        req.storedToken = storedToken
         next()
 
 
