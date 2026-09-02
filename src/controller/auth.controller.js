@@ -35,7 +35,7 @@ export const handleLogin = async (req, res) => {
         // Access Token
         const accessToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
-            expiresIn: '1m',
+            expiresIn: '15m',
             issuer: env.ISSUER,
             audience: env.AUDIENCE,
         })
@@ -62,7 +62,7 @@ export const handleLogin = async (req, res) => {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
             sameSite: "Strict",
-            maxAge: 1 * 60 * 1000  // 15 Min Expiry
+            maxAge: 15 * 60 * 1000  // 15 Min Expiry
         }).cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
@@ -167,9 +167,6 @@ export const handleRefreshToken = async (req, res) => {
         const user = req.user
         if (!user) throw new AppError("User data not found", 401)
 
-
-            console.log("Helllo refresh token")
-
         const payload = {
             sub: user.sub,
             email: user.email
@@ -177,12 +174,12 @@ export const handleRefreshToken = async (req, res) => {
 
         const newAccessToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
-            expiresIn: "1m",
+            expiresIn: "15m",
             issuer: env.ISSUER,
             audience: env.AUDIENCE
         })
 
-        const newRefreshToken = jwt.sign({sub:user.sub}, privateKey, {
+        const newRefreshToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
             expiresIn: "7d",
             issuer: env.ISSUER,
@@ -202,7 +199,7 @@ export const handleRefreshToken = async (req, res) => {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
             sameSite: "Strict",
-            maxAge: 1 * 60 * 1000  // 15min
+            maxAge: 15 * 60 * 1000  // 15min
         }).cookie('refreshToken', newRefreshToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",

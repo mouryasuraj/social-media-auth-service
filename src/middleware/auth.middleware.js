@@ -19,7 +19,7 @@ export const authMiddleware = async (req, res, next) => {
         if (!decoded) throw new AppError("User id not found in token", 401)
 
         const { email } = decoded
-        console.log(email)
+
         const user = await AuthUser.findOne({ email })
         if (!user) throw new AppError("User not found", 401)
 
