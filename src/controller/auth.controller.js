@@ -1,8 +1,8 @@
 import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
-import { validateSignUpReqBody, validateVerifyOtpParams, validateLoginReqBody } from "./index.js"
-import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse,emailAlreadyExistsTxt,maxAttemp,somethingWentWrongTxt,unauthorizedAccessTxt } from "../utils/index.js"
+import { validateSignUpReqBody, validateVerifyOtpParams, validateLoginReqBody, validateGoogleFields } from "./index.js"
+import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse,emailAlreadyExistsTxt,maxAttemp,somethingWentWrongTxt,unauthorizedAccessTxt, verifyGoogleCred } from "../utils/index.js"
 import { AuthUser, RefreshToken } from "../model/index.js"
 import { env, privateKey, redis } from '../config/index.js'
 import { storeOTP, verifyOTP } from '../services/index.js'
@@ -135,7 +135,7 @@ export const handleVerifyOTP = async (req, res) => {
 
         if (data.valid) {
             // Create newUser
-            const newUser = new AuthUser({ ...data?.payload, isEmailVerified: true })
+            const newUser = new AuthUser({ ...data?.payload, isEmailVerified: true, authProvider:"local" })
             const savedUser = await newUser.save()
             const { fullName, email } = savedUser;
             const response = { fullName, email }
@@ -247,5 +247,64 @@ export const handleVerifyToken = async (req,res) => {
     } catch (error) {
         consoleError(error)
         handleError(res,401,unauthorizedAccessTxt)
+    }
+}
+
+
+
+// handleGoogleLogin
+export const handelGoogleLogin = async (req,res) =>{
+    try {
+        const reqBody = validateGoogleFields(req)
+        const {credentials} = reqBody
+
+        // verify credentials with google
+        const payload = await verifyGoogleCred(credentials)
+        
+        handleSendResponse(res, 200, true, "Google logged in successfully", {credentials})
+        
+        
+    } catch (error) {
+        consoleError(error)
+        const statusCode = error.statusCode || 500
+        handleError(res, statusCode, "Invalid credentials")
+    }
+}
+
+// handleGoogleSignup
+export const handelGoogleSignup = async (req,res) =>{
+    try {
+
+        const reqBody = validateGoogleFields(req)
+        const {credentials} = reqBody
+
+        // verify credentials with google
+        const {email,email_verified,sub } = await verifyGoogleCred(credentials)
+        
+        const existingUser = await AuthUser.findOne({email})
+        if(existingUser && existingUser.authProvider === "local"){
+            throw new AppError("Email already exist. Please login with email and password", 409)
+        }
+        if(existingUser && existingUser.authProvider === "google"){
+            throw new AppError("Email already registered with us. Please login with your google", 409)
+        }
+
+        const newUser = new AuthUser({
+            isEmailVerified:email_verified,
+            authProvider:"google",
+            googleId:sub,
+            password:null,
+            email
+        })
+        await newUser.save()
+
+
+        
+        handleSendResponse(res, 200, true, "Google logged in successfully", {credentials})
+        
+    } catch (error) {
+        consoleError(error)
+        const statusCode = error.statusCode || 500
+        handleError(res, statusCode, error.message || "invalid credentials")
     }
 }

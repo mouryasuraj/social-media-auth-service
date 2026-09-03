@@ -8,6 +8,7 @@ export const maxAttemp = "Max Attempts reached. Account is blocked. Please conta
 export const allowedSignUpFields = ["fullName","email","password"]
 export const allowedLoginFields = ["email","password"]
 
+export const allowedGoogleFields = ["credentials"]
 
 
 export const emailOtpKey = 'email_otp'

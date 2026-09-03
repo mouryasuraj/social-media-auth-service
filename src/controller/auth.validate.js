@@ -1,4 +1,4 @@
-import { AppError, consoleError } from "../utils/index.js"
+import { allowedGoogleFields, AppError, consoleError } from "../utils/index.js"
 import { allowedSignUpFields, reqBodyNotPresentTxt, allowedLoginFields, unauthorizedAccessTxt } from "../utils/index.js"
 import validator from 'validator'
 
@@ -95,4 +95,30 @@ export const validateVerifyOtpParams = (req) =>{
     if(!validator.isEmail(email)) throw new AppError("invalid email", 400)
 
     return params
+}
+
+
+export const validateGoogleFields = (req) => {
+    if (!req?.body || Object.keys(req?.body || {}).length === 0) throw new AppError(reqBodyNotPresentTxt, 400)
+
+    const reqBody = req.body
+    const reqBodyFields = Object.keys(reqBody)
+
+    const extraFields = reqBodyFields.filter(f => !allowedGoogleFields.includes(f))
+    if (extraFields.length > 0) {
+        const errorMsg = `fields are not allowed: [${extraFields.join(", ")}]`
+        throw new AppError(errorMsg, 400)
+    }
+
+    const isMissingFields = !allowedGoogleFields.every(f => reqBodyFields.includes(f))
+    if (isMissingFields) {
+        const errorMsg = `Required fields are missing: ${allowedGoogleFields.join(", ")}`
+        throw new AppError(errorMsg, 400)
+    }
+
+    const { credentials } = reqBody;
+    if(!credentials) throw new AppError("credentials is not present", 400)
+       
+
+    return reqBody
 }

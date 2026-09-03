@@ -10,8 +10,17 @@ const authUserSchema = new Schema({
     },
     password: {
         type: String,
-        required: true,
         trim: true
+    },
+    authProvider:{
+        type:String,
+        enum:["local","google"],
+        required:true
+    },
+    googleId:{
+        type:String,
+        sparse:true,
+        unique:true
     },
     isEmailVerified: {
         type: Boolean,
