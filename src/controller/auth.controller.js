@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import jwt from 'jsonwebtoken'
 import { validateSignUpReqBody, validateVerifyOtpParams, validateLoginReqBody, validateGoogleFields } from "./index.js"
-import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse,emailAlreadyExistsTxt,maxAttemp,somethingWentWrongTxt,unauthorizedAccessTxt, verifyGoogleCred } from "../utils/index.js"
+import { AppError, consoleError, emailOtpKey, getStandardErrorMessage, handleError, handleSendResponse,emailAlreadyExistsTxt,maxAttemp,somethingWentWrongTxt,unauthorizedAccessTxt, verifyGoogleCred, helper } from "../utils/index.js"
 import { AuthUser, RefreshToken } from "../model/index.js"
 import { env, privateKey, redis } from '../config/index.js'
 import { storeOTP, verifyOTP } from '../services/index.js'
@@ -19,6 +19,8 @@ export const handleLogin = async (req, res) => {
         // Check user existence
         const user = await AuthUser.findOne({ email })
         if (!user) throw new AppError("User not found", 401)
+        
+        if(user?.authProvider==="google") throw new AppError("This email is registered with Google. Please try to Sign in with it.", 400)
 
         // Verify password
         const isPassValid = await user.isPasswordValid(password)
@@ -32,31 +34,11 @@ export const handleLogin = async (req, res) => {
             email: user.email
         }
 
-        // Access Token
-        const accessToken = jwt.sign(payload, privateKey, {
-            algorithm: 'RS256',
-            expiresIn: '15m',
-            issuer: env.ISSUER,
-            audience: env.AUDIENCE,
-        })
+        // Tokens
+        const accessToken = helper.generateToken(payload, "RS256", "15m")
+        const refreshToken = helper.generateToken(payload, "RS256", "7d")
 
-        // Refresh Token
-        const refreshToken = jwt.sign(payload, privateKey, {
-            algorithm: 'RS256',
-            expiresIn: "7d",
-            issuer: env.ISSUER,
-            audience: env.AUDIENCE,
-        })
-
-        const hashedRefreshToken = crypto.createHash('sha256').update(refreshToken).digest('hex')
-
-        // Save refresh token in DB
-        const newRefreshToken = new RefreshToken({
-            userId: id,
-            token: hashedRefreshToken,
-            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        })
-        await newRefreshToken.save()
+        await helper.saveHashedToken(refreshToken, id)
 
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
@@ -80,7 +62,7 @@ export const handleLogin = async (req, res) => {
     } catch (error) {
         consoleError(error)
         const statusCode = error.statusCode || 500
-        handleError(res, statusCode, "Invalid credentials")
+        handleError(res, statusCode, error?.message)
     }
 }
 
@@ -259,15 +241,54 @@ export const handelGoogleLogin = async (req,res) =>{
         const {credentials} = reqBody
 
         // verify credentials with google
-        const payload = await verifyGoogleCred(credentials)
+        const {email,email_verified} = await verifyGoogleCred(credentials)
         
-        handleSendResponse(res, 200, true, "Google logged in successfully", {credentials})
+        const existingUser = await AuthUser.findOne({email})
+
+        if(!existingUser) throw new AppError("Email is not registered with us. Please create an account", 500)
+
+        if(existingUser && existingUser.authProvider === "local"){
+            throw new AppError("This email requires password. Please login with email and password", 409)
+        }
+
+        const {_id} = existingUser
+
+        const payload = {
+            sub: _id,
+            email
+        }
+        
+        // Tokens
+        const accessToken = helper.generateToken(payload, "RS256", "15m")
+        const refreshToken = helper.generateToken(payload, "RS256", "7d")
+
+        await helper.saveHashedToken(refreshToken, _id)
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: env.COOKIE_SECURE === "true",
+            sameSite: "Strict",
+            maxAge: 15 * 60 * 1000  // 15 Min Expiry
+        }).cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: env.COOKIE_SECURE === "true",
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000  // 7 Days Expiry
+        })
+
+        const userData = {
+            userId: _id,
+            email: email,
+            isEmailVerified: email_verified
+        }
+
+        handleSendResponse(res, 200, true, "Logged in successfully", userData)
         
         
     } catch (error) {
         consoleError(error)
         const statusCode = error.statusCode || 500
-        handleError(res, statusCode, "Invalid credentials")
+        handleError(res, statusCode, error?.message)
     }
 }
 
@@ -286,7 +307,7 @@ export const handelGoogleSignup = async (req,res) =>{
             throw new AppError("Email already exist. Please login with email and password", 409)
         }
         if(existingUser && existingUser.authProvider === "google"){
-            throw new AppError("Email already registered with us. Please login with your google", 409)
+            throw new AppError("Email already registered with us. Please Sign in with your google", 409)
         }
 
         const newUser = new AuthUser({
@@ -296,11 +317,38 @@ export const handelGoogleSignup = async (req,res) =>{
             password:null,
             email
         })
-        await newUser.save()
-
-
+        const {_id} = await newUser.save()
         
-        handleSendResponse(res, 200, true, "Google logged in successfully", {credentials})
+        const payload = {
+            sub: _id,
+            email
+        }
+        
+        // Tokens
+        const accessToken = helper.generateToken(payload, "RS256", "15m")
+        const refreshToken = helper.generateToken(payload, "RS256", "7d")
+
+        await helper.saveHashedToken(refreshToken, _id)
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: env.COOKIE_SECURE === "true",
+            sameSite: "Strict",
+            maxAge: 15 * 60 * 1000  // 15 Min Expiry
+        }).cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: env.COOKIE_SECURE === "true",
+            sameSite: "Strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000  // 7 Days Expiry
+        })
+
+        const userData = {
+            userId: _id,
+            email: email,
+            isEmailVerified: email_verified
+        }
+
+        handleSendResponse(res, 200, true, "Logged in successfully", userData)
         
     } catch (error) {
         consoleError(error)
