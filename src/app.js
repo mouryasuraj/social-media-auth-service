@@ -26,7 +26,7 @@ app.use("/auth", authRouter)
 // DB Connection
 connectDB().then(async() => {
     console.log("DB Connection Established")
-    // await connectProducer()
+    await connectProducer()
     app.listen(env.PORT, () => {
         console.log(`Server is running on port: ${env.PORT}`)
     })
