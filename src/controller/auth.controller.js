@@ -43,12 +43,12 @@ export const handleLogin = async (req, res) => {
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
-            sameSite: "Strict",
+            sameSite: env.SAME_SITE,
             maxAge: 15 * 60 * 1000  // 15 Min Expiry
         }).cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
-            sameSite: "Strict",
+            sameSite: env.SAME_SITE,
             maxAge: 7 * 24 * 60 * 60 * 1000  // 7 Days Expiry
         })
 
@@ -267,12 +267,12 @@ export const handelGoogleLogin = async (req,res) =>{
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
-            sameSite: "Strict",
+            sameSite: env.SAME_SITE,
             maxAge: 15 * 60 * 1000  // 15 Min Expiry
         }).cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
-            sameSite: "Strict",
+            sameSite: env.SAME_SITE,
             maxAge: 7 * 24 * 60 * 60 * 1000  // 7 Days Expiry
         })
 
@@ -333,12 +333,12 @@ export const handelGoogleSignup = async (req,res) =>{
         res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
-            sameSite: "Strict",
+            sameSite: env.SAME_SITE,
             maxAge: 15 * 60 * 1000  // 15 Min Expiry
         }).cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: env.COOKIE_SECURE === "true",
-            sameSite: "Strict",
+            sameSite: env.SAME_SITE,
             maxAge: 7 * 24 * 60 * 60 * 1000  // 7 Days Expiry
         })
 

@@ -17,5 +17,6 @@ export const env = {
     AUDIENCE:process.env.AUDIENCE,
     COOKIE_SECURE:process.env.COOKIE_SECURE,
     KAFKA_BROKER:process.env.KAFKA_BROKER,
+    SAME_SITE:process.env.SAME_SITE,
     GOOGLE_CLIENT:process.env.GOOGLE_Client_ID,
 };
