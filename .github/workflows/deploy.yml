@@ -11,15 +11,9 @@ jobs:
       - name: Test EC2 SSH connection
         uses: appleboy/ssh-action@v1
         with:
-          host: 3.209.23.93
-          username: ubuntu
-          key: -----BEGIN OPENSSH PRIVATE KEY-----
-              b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-              QyNTUxOQAAACC56ua3LwCAmRp9lX4ffGU11qJCtp2JopLVwYm6YjDpqAAAAJhY8+K7WPPi
-              uwAAAAtzc2gtZWQyNTUxOQAAACC56ua3LwCAmRp9lX4ffGU11qJCtp2JopLVwYm6YjDpqA
-              AAAEA+Bd5fnurbxkTaUtT54wsQZe3xw3neA/oFV69GzfmUOrnq5rcvAICZGn2Vfh98ZTXW
-              okK2nYmiktXBibpiMOmoAAAAFWdpdGh1Yi1hY3Rpb25zLWRlcGxveQ==
-              -----END OPENSSH PRIVATE KEY-----
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             echo "Connected to EC2 successfully"
             whoami
