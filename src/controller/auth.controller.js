@@ -27,11 +27,13 @@ export const handleLogin = async (req, res) => {
         if (!isPassValid) throw new AppError("Invalid password", 401)
 
         const id = user?._id.toString()
+        const email_verified = user.isEmailVerified
 
         // Payload to put inside jwt token
         const payload = {
             sub: id,
-            email: user.email
+            email: user.email,
+            email_verified
         }
 
         // Tokens
@@ -255,7 +257,8 @@ export const handelGoogleLogin = async (req,res) =>{
 
         const payload = {
             sub: _id,
-            email
+            email,
+            email_verified
         }
         
         // Tokens
@@ -321,7 +324,8 @@ export const handelGoogleSignup = async (req,res) =>{
         
         const payload = {
             sub: _id,
-            email
+            email,
+            email_verified
         }
         
         // Tokens
