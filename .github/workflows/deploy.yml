@@ -1,22 +1,31 @@
-name: Deploy Auth Service
+name: Test EC2 SSM
 
 on:
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
-  test-ec2-connection:
+  test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Test EC2 SSH connection
-        uses: appleboy/ssh-action@v1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            echo "Connected to EC2 successfully"
-            whoami
-            docker --version
-            docker compose version
-            docker compose ps
+          role-to-assume: arn:aws:iam::836503213491:role/GitHubActions-Deploy-Auth
+          aws-region: us-east-1
+
+      - name: Check AWS identity
+        run: |
+          aws sts get-caller-identity
+
+      - name: Run command on EC2
+        run: |
+          aws ssm send-command \
+            --instance-ids i-01e773d973f2a1cb3 \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["echo GitHub Actions connected successfully","whoami","docker --version","docker compose version"]'
